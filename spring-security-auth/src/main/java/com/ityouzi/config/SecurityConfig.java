@@ -5,8 +5,11 @@ import com.google.code.kaptcha.Producer;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.code.kaptcha.util.Config;
 import com.ityouzi.entity.RespBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
@@ -16,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -32,6 +36,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return NoOpPasswordEncoder.getInstance();
     }
 
+    @Override
+    @Bean
+    protected AuthenticationManager authenticationManager()throws Exception{
+        ProviderManager manager = new ProviderManager(Arrays.asList(myAuthenticationProvider()));
+        return manager;
+    }
+
+
     @Bean
     @Override
     protected UserDetailsService userDetailsService(){
@@ -40,6 +52,40 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return manager;
     }
 
+
+
+
+
+
+    @Autowired
+    MyWebAuthenticationDetailsSource myWebAuthenticationDetailsSource;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception{
+        http.authorizeRequests()
+                .antMatchers("/vc.jpg").permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .authenticationDetailsSource(myWebAuthenticationDetailsSource)
+                .successHandler((req, resp, auth) ->{
+                    resp.setContentType("application/json;charset=utf-8");
+                    PrintWriter out = resp.getWriter();
+                    out.write(new ObjectMapper().writeValueAsString(RespBean.ok("success",auth.getPrincipal())));
+                    out.flush();
+                    out.close();
+                })
+                .failureHandler((req, resp, e) ->{
+                    resp.setContentType("application/json;charset=utf-8");
+                    PrintWriter out = resp.getWriter();
+                    out.write(new ObjectMapper().writeValueAsString(RespBean.error(e.getMessage())));
+                    out.flush();
+                    out.close();
+                })
+                .permitAll()
+                .and()
+                .csrf().disable();
+    }
 
     @Bean
     MyAuthenticationProvider myAuthenticationProvider(){
@@ -64,33 +110,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         defaultKaptcha.setConfig(config);
         return defaultKaptcha;
     }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception{
-        http.authorizeRequests()
-                .antMatchers("/vc.jpg").permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .successHandler((req, resp, auth) ->{
-                    resp.setContentType("application/json;charset=utf-8");
-                    PrintWriter out = resp.getWriter();
-                    out.write(new ObjectMapper().writeValueAsString(RespBean.ok("success",auth.getPrincipal())));
-                    out.flush();
-                    out.close();
-                })
-                .failureHandler((req, resp, e) ->{
-                    resp.setContentType("application/json;charset=utf-8");
-                    PrintWriter out = resp.getWriter();
-                    out.write(new ObjectMapper().writeValueAsString(RespBean.error(e.getMessage())));
-                    out.flush();
-                    out.close();
-                })
-                .permitAll()
-                .and()
-                .csrf().disable();
-    }
-
 
 
 }

@@ -5,10 +5,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @Auther: Liberal-World
@@ -21,17 +17,22 @@ public class MyAuthenticationProvider extends DaoAuthenticationProvider {
     @Override
     protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication)
             throws AuthenticationException {
-        // 获取当前请求
-        HttpServletRequest req = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
-        String code = req.getParameter("code");
-        // 从 session 中获取生成的验证码字符串
-        String verify_code = (String) req.getSession().getAttribute("verify_code");
-        if (code == null || verify_code == null || !code.equals(verify_code)){
+//        // 获取当前请求
+//        HttpServletRequest req = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
+//        String code = req.getParameter("code");
+//        // 从 session 中获取生成的验证码字符串
+//        String verify_code = (String) req.getSession().getAttribute("verify_code");
+//        if (code == null || verify_code == null || !code.equals(verify_code)){
+//            throw new AuthenticationServiceException("验证码错误");
+//        }
+//        // 最后通过 super 调用父类方法，也就是 DaoAuthenticationProvider 的 additionalAuthenticationChecks 方法，该方法中主要做密码的校验
+//        super.additionalAuthenticationChecks(userDetails,authentication);
+
+
+        if (!((MyWebAuthenticationDetails) authentication.getDetails()).isPassed()){
             throw new AuthenticationServiceException("验证码错误");
         }
-        // 最后通过 super 调用父类方法，也就是 DaoAuthenticationProvider 的 additionalAuthenticationChecks 方法，该方法中主要做密码的校验
-        super.additionalAuthenticationChecks(userDetails,authentication);
-
+        super.additionalAuthenticationChecks(userDetails, authentication);
     }
 
 
