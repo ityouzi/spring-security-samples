@@ -1,6 +1,5 @@
-#idea
-.idea/
-/idea/
-*.ipr
+
+.DS_Store
+.idea
 *.iml
-*.iws
+target/
