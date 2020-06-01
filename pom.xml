@@ -12,6 +12,7 @@
         <module>spring-security-remeberme-autologin</module>
         <module>spring-security-rememberme-persis</module>
         <module>spring-security-auth</module>
+        <module>springboot-session-gx</module>
     </modules>
 
     <parent>
